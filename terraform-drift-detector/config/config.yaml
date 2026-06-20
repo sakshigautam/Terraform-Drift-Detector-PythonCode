@@ -1,0 +1,11 @@
+terraform:
+  working_dir: ./terraform
+
+reports:
+  output_dir: ./reports
+
+openai:
+  model: gpt-5
+
+risk:
+  auto_fix: false
