@@ -1,90 +1,55 @@
 **Architecture Diagram**
 
 
-┌──────────────────────────────────────────────┐
-│ **GitHub Actions / Jenkins / Cron Scheduler**│
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ scripts/run_scan.sh                          │
-│                                              │
-│ python app/main.py                           │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ app/main.py                                  │
-│                                              │
-│ Loads config/config.yaml                     │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ app/terraform_runner.py                      │
-│                                              │
-│ terraform plan -refresh-only                 │
-│ terraform show -json                         │
-│                                              │
-│ Generates drift.json                         │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ app/drift_parser.py                          │
-│                                              │
-│ Reads resource_changes                       │
-│ Extracts:                                   │
-│  - resource name                            │
-│  - action                                   │
-│  - before state                             │
-│  - after state                              │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-         ┌───────────────────┐
-         │ Drift Detected ?  │
-         └───────┬───────────┘
-                 │
-        ┌────────┴────────┐
-        │                 │
-        ▼                 ▼
-     NO DRIFT          DRIFT FOUND
-        │                 │
-        ▼                 ▼
-     EXIT          app/openai_analyzer.py
-                         │
-                         ▼
-┌──────────────────────────────────────────────┐
-│ OpenAI GPT-5                                 │
-│                                              │
-│ Analyze Drift                                │
-│ Classify Severity                            │
-│ Determine Intent                             │
-│ Assess Risk                                  │
-│ Generate Terraform Fix Script                │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ app/remediation_generator.py                 │
-│                                              │
-│ Creates:                                     │
-│ reports/analysis.json                        │
-│ reports/remediation.sh                       │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ Operations Team                              │
-│                                              │
-│ Reviews AI Recommendation                    │
-│ Reviews Generated Script                     │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│ Manual Execution                             │
-│                                              │
-│ bash reports/remediation.sh                  │
-└──────────────────────────────────────────────┘
+# Terraform AI Drift Detector - End-to-End Architecture
+
+```mermaid
+flowchart TD
+
+    A["Scheduler<br/>GitHub Actions / Jenkins / Cron"] --> B["run_scan.sh"]
+
+    B --> C["main.py"]
+
+    C --> D["Load Configuration<br/>config.yaml"]
+
+    D --> E["Terraform Runner"]
+
+    E --> F["terraform plan -refresh-only"]
+
+    F --> G["terraform show -json"]
+
+    G --> H["drift.json"]
+
+    H --> I["Drift Parser"]
+
+    I --> J{"Drift Found?"}
+
+    J -->|No| K["Exit Successfully"]
+
+    J -->|Yes| L["OpenAI Analyzer"]
+
+    L --> M["GPT-5 Analysis"]
+
+    M --> N["Intent Detection"]
+
+    N --> O["Risk Assessment"]
+
+    O --> P["Generate Remediation Script"]
+
+    P --> Q["analysis.json"]
+
+    P --> R["remediation.sh"]
+
+    Q --> S["Operations Team Review"]
+
+    R --> S
+
+    S --> T["Manual Approval"]
+
+    T --> U["Execute Remediation"]
+
+    U --> V["Terraform Apply"]
+
+    V --> W["Infrastructure Restored"]
+```
+
