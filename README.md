@@ -1,55 +1,47 @@
 **Architecture Diagram**
 
 
-# Terraform AI Drift Detector - End-to-End Architecture
+## Architecture Diagram
 
 ```mermaid
 flowchart TD
 
-    A["Scheduler<br/>GitHub Actions / Jenkins / Cron"] --> B["run_scan.sh"]
+    A[GitHub Actions / Jenkins / Cron] --> B[run_scan.sh]
+    B --> C[main.py]
 
-    B --> C["main.py"]
+    C --> D[Load config.yaml]
 
-    C --> D["Load Configuration<br/>config.yaml"]
+    D --> E[terraform_runner.py]
 
-    D --> E["Terraform Runner"]
+    E --> F[terraform plan -refresh-only]
+    F --> G[terraform show -json]
 
-    E --> F["terraform plan -refresh-only"]
+    G --> H[drift.json]
 
-    F --> G["terraform show -json"]
+    H --> I[drift_parser.py]
 
-    G --> H["drift.json"]
+    I --> J{Drift Found?}
 
-    H --> I["Drift Parser"]
+    J -->|No| K[Exit]
 
-    I --> J{"Drift Found?"}
+    J -->|Yes| L[openai_analyzer.py]
 
-    J -->|No| K["Exit Successfully"]
+    L --> M[OpenAI GPT-5]
 
-    J -->|Yes| L["OpenAI Analyzer"]
+    M --> N[Severity Analysis]
+    N --> O[Intent Detection]
+    O --> P[Risk Assessment]
+    P --> Q[Generate Remediation Script]
 
-    L --> M["GPT-5 Analysis"]
+    Q --> R[analysis.json]
+    Q --> S[remediation.sh]
 
-    M --> N["Intent Detection"]
+    R --> T[Operations Team]
+    S --> T
 
-    N --> O["Risk Assessment"]
+    T --> U[Review]
+    U --> V[Execute Script]
 
-    O --> P["Generate Remediation Script"]
-
-    P --> Q["analysis.json"]
-
-    P --> R["remediation.sh"]
-
-    Q --> S["Operations Team Review"]
-
-    R --> S
-
-    S --> T["Manual Approval"]
-
-    T --> U["Execute Remediation"]
-
-    U --> V["Terraform Apply"]
-
-    V --> W["Infrastructure Restored"]
+    V --> W[Terraform Apply]
+    W --> X[Infrastructure Restored]
 ```
-
